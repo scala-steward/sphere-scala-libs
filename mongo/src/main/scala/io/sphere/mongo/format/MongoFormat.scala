@@ -4,10 +4,15 @@ import com.mongodb.DBObject
 
 
 /** Typeclass for types with a MongoDB (Java driver) format. */
-trait MongoFormat[@specialized A] {
+trait MongoFormat[@specialized A] { self ⇒
   def toMongoValue(a: A): Any
   def fromMongoValue(any: Any): A
   def default: Option[A] = None
+
+  def imap[B](f: A ⇒ B)(g: B ⇒ A): MongoFormat[B] = new MongoFormat[B] {
+    override def toMongoValue(b: B): Any = self.toMongoValue(g(b))
+    override def fromMongoValue(any: Any): B = f(self.fromMongoValue(any))
+  }
 }
 
 object MongoFormat {
